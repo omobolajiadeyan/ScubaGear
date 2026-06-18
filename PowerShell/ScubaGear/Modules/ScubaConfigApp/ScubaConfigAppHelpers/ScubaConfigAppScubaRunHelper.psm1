@@ -566,10 +566,13 @@ Function Build-ScubaGearCommand {
     $parameters = @()
 
     # REQUIRED DEFAULT PARAMETERS - Always include these
-    $parameters += "-ConfigFilePath '$ConfigFilePath'"
+    # Escape values to prevent PowerShell injection when they are embedded in the command string.
+    $escapedConfigFilePath = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($ConfigFilePath)
+    $parameters += "-ConfigFilePath '$escapedConfigFilePath'"
 
     $organizationValue = $syncHash.Organization_TextBox.Text
-    $parameters += "-Organization '$organizationValue'"
+    $escapedOrganization = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($organizationValue)
+    $parameters += "-Organization '$escapedOrganization'"
 
     # OPTIONAL PARAMETERS - Only add these if they have values and are not the removed defaults
     if ($scubaConfig.powershell.parameters) {
@@ -595,8 +598,9 @@ Function Build-ScubaGearCommand {
                     $textBoxName = $paramName + "_TextBox"
                     $textBox = $syncHash.$textBoxName
                     if ($textBox -and ![string]::IsNullOrWhiteSpace($textBox.Text)) {
-                        $parameters += "-$actualParamName '$($textBox.Text)'"
-                        Write-DebugOutput -Message "Added optional string parameter: -$actualParamName '$($textBox.Text)'" -Source $MyInvocation.MyCommand -Level "Debug"
+                        $escapedText = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($textBox.Text)
+                        $parameters += "-$actualParamName '$escapedText'"
+                        Write-DebugOutput -Message "Added optional string parameter: -$actualParamName '$escapedText'" -Source $MyInvocation.MyCommand -Level "Debug"
                     }
                 }
                 "boolean" {
@@ -614,7 +618,8 @@ Function Build-ScubaGearCommand {
 
                     if ($null -ne $comboBox.SelectedItem) {
                         If ($comboBox.SelectedItem -is [string]) {
-                            $parameters += "-$actualParamName '$($comboBox.SelectedItem)'"
+                            $escapedItem = [System.Management.Automation.Language.CodeGeneration]::EscapeSingleQuotedStringContent($comboBox.SelectedItem)
+                            $parameters += "-$actualParamName '$escapedItem'"
                         } else {
                             $parameters += "-$actualParamName $($comboBox.SelectedItem)"
                         }

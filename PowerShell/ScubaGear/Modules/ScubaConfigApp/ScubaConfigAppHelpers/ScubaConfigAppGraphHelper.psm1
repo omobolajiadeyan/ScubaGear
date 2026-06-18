@@ -295,7 +295,9 @@ Function Show-GraphProgressWindow {
         # Build filter string
         $filterString = $null
         if (![string]::IsNullOrWhiteSpace($SearchTerm)) {
-            $filterString = "startswith($($config.FilterProperty),'$SearchTerm')"
+            # Escape single quotes in the search term to prevent OData filter injection.
+            $escapedTerm = $SearchTerm -replace "'", "''"
+            $filterString = "startswith($($config.FilterProperty),'$escapedTerm')"
         }
 
         # Show progress window

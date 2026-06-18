@@ -901,6 +901,54 @@ Function Invoke-PolicyMigration {
         }
     }
 
+    #---------------------------------------------------------------------------
+    # Pass 3 - Update ProductNames to reflect migrated products
+    #---------------------------------------------------------------------------
+    if ($Config.Keys -contains 'ProductNames') {
+        $currentProductNames = @($Config['ProductNames'])
+
+        # Build a case-insensitive oldProduct → newProduct map from the migration entries,
+        # but ONLY for products that no longer exist in the current app (e.g. "Defender").
+        # Products that are still valid (e.g. "EXO") must not be replaced even if some of
+        # their policies were individually migrated to SecuritySuite.
+        $validProductIds = @($syncHash.UIConfigs.products | Select-Object -ExpandProperty id)
+        $productReplaceMap = [System.Collections.Generic.Dictionary[string,string]]::new(
+            [System.StringComparer]::OrdinalIgnoreCase
+        )
+        foreach ($entry in $migrationMap.Values) {
+            if ($entry.oldProduct -and $entry.newProduct -and
+                $entry.oldProduct -ne $entry.newProduct -and
+                -not $productReplaceMap.ContainsKey($entry.oldProduct)) {
+                # Only replace legacy products that are no longer in the active product list.
+                $isLegacyProduct = -not ($validProductIds | Where-Object { $_ -ieq $entry.oldProduct })
+                if ($isLegacyProduct) {
+                    $productReplaceMap[$entry.oldProduct] = $entry.newProduct
+                }
+            }
+        }
+
+        $updatedProductNames = [System.Collections.Generic.List[string]]::new()
+        $productNamesChanged = $false
+        foreach ($productName in $currentProductNames) {
+            if ($productReplaceMap.ContainsKey($productName)) {
+                $newProductName = $productReplaceMap[$productName]
+                Write-DebugOutput -Message "Updated ProductNames: replaced '$productName' with '$newProductName'" -Source $MyInvocation.MyCommand -Level "Info"
+                [void]$syncHash.MigrationLog.Add("ProductNames updated: '$productName' → '$newProductName'")
+                # Only add the replacement once even if multiple old policies map to the same new product.
+                if (-not ($updatedProductNames | Where-Object { $_ -ieq $newProductName })) {
+                    $updatedProductNames.Add($newProductName)
+                }
+                $productNamesChanged = $true
+            } else {
+                $updatedProductNames.Add($productName)
+            }
+        }
+
+        if ($productNamesChanged) {
+            $Config['ProductNames'] = @($updatedProductNames)
+        }
+    }
+
     Write-DebugOutput -Message "Policy migration complete: $($syncHash.MigrationLog.Count) change(s)" -Source $MyInvocation.MyCommand -Level "Info"
     return $Config
 }
