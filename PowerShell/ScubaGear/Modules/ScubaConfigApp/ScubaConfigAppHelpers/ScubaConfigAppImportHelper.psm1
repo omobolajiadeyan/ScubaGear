@@ -931,7 +931,9 @@ Function Invoke-PolicyMigration {
         $productNamesChanged = $false
         foreach ($productName in $currentProductNames) {
             if ($productReplaceMap.ContainsKey($productName)) {
-                $newProductName = $productReplaceMap[$productName]
+                # ScubaGear's Invoke-SCuBA ValidateSet expects lowercase product names (e.g. "securitysuite"),
+                # so normalize the replacement to lowercase to match what the original YAML used.
+                $newProductName = $productReplaceMap[$productName].ToLower()
                 Write-DebugOutput -Message "Updated ProductNames: replaced '$productName' with '$newProductName'" -Source $MyInvocation.MyCommand -Level "Info"
                 [void]$syncHash.MigrationLog.Add("ProductNames updated: '$productName' → '$newProductName'")
                 # Only add the replacement once even if multiple old policies map to the same new product.
