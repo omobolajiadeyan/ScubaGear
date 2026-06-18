@@ -10,7 +10,7 @@
   "MaximumResults": 10,
   "PullOnlineBaselines": false,
   "EnablePolicyViewer": true,
-  "OnlineBaselineSchemaURL": "https://raw.githubusercontent.com/cisagov/ScubaGear/main/PowerShell/ScubaGear/schemas/ScubaBaselines.json",
+  "OnlineBaselineSchemaURL": "https://raw.githubusercontent.com/cisagov/ScubaGear/refs/heads/main/PowerShell/ScubaGear/schemas/ScubaBaselines.json",
   "GitHubRepositoryUrl": "https://github.com/cisagov/ScubaGear",
   "LocalBaselineSchemaPath": "..\\..\\schemas\\ScubaBaselines.json",
   "DefaultConfigsSchemaPath": "..\\ScubaConfig\\ScubaConfigDefaults.json",
