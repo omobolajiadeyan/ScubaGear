@@ -355,9 +355,10 @@ Function Test-FieldValidation {
                         $scriptValidationFailed = $false
                         foreach ($scriptCheck in $validation.invalidScriptChecks) {
                             try {
-                                # Create a script block that has access to $value variable
-                                $scriptWithValue = '$value = {0}; {1}' -f ("'$fieldValue'"), $scriptCheck
-                                $scriptResult = [scriptblock]::Create($scriptWithValue).Invoke()
+                                # Create a script block and pass $fieldValue as a bound variable
+                                # to avoid injection via string interpolation into the scriptblock.
+                                $sb = [scriptblock]::Create($scriptCheck)
+                                $scriptResult = $sb.InvokeWithContext($null, [psvariable]::new('value', $fieldValue))
 
                                 # Any script that returns false/null/empty indicates failure
                                 if (-not $scriptResult -or $scriptResult -eq $false -or [string]::IsNullOrEmpty($scriptResult)) {
