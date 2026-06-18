@@ -20,9 +20,19 @@
             return
         }
 
-        # Create configuration file in results folder
-        $configFileName = "ScubaGearConfiguration.yaml"
+        # Name the config file after the organization (e.g. dtolab.onmicrosoft.com.yaml).
+        # Fall back to a generic name if no org is set.
+        $orgName = $syncHash.GeneralSettingsData.Organization
+        if (-not [string]::IsNullOrWhiteSpace($orgName)) {
+            $invalidChars = [System.IO.Path]::GetInvalidFileNameChars() -join ''
+            $sanitizedOrg = $orgName -replace "[$([regex]::Escape($invalidChars))]", '_'
+            $configFileName = "$sanitizedOrg.yaml"
+        } else {
+            $configFileName = "ScubaGearConfiguration.yaml"
+        }
         $configFilePath = Join-Path $ResultsFolder $configFileName
+        # Store for use by the View Configuration button after the run completes.
+        $syncHash.LastScubaRunConfigFilePath = $configFilePath
 
         # Write YAML content to file
         [System.IO.File]::WriteAllText($configFilePath, $yamlContent, [System.Text.Encoding]::UTF8)
@@ -314,7 +324,7 @@ Function Initialize-ScubaRunTab {
 
     $syncHash.ScubaRunViewConfig_Button.Add_Click({
         if ($syncHash.LastScubaRunResultsFolder) {
-            $configFilePath = Join-Path $syncHash.LastScubaRunResultsFolder "ScubaGearConfiguration.yaml"
+            $configFilePath = if ($syncHash.LastScubaRunConfigFilePath) { $syncHash.LastScubaRunConfigFilePath } else { Join-Path $syncHash.LastScubaRunResultsFolder "ScubaGearConfiguration.yaml" }
             if (Test-Path $configFilePath) {
                 Show-ConfigurationViewer -ConfigFilePath $configFilePath
             } else {
@@ -1086,7 +1096,7 @@ Function Complete-ScubaGearExecution {
 
     # Enable View Configuration button if we have a results folder
     if ($syncHash.LastScubaRunResultsFolder) {
-        $configFilePath = Join-Path $syncHash.LastScubaRunResultsFolder "ScubaGearConfiguration.yaml"
+        $configFilePath = if ($syncHash.LastScubaRunConfigFilePath) { $syncHash.LastScubaRunConfigFilePath } else { Join-Path $syncHash.LastScubaRunResultsFolder "ScubaGearConfiguration.yaml" }
         if (Test-Path $configFilePath) {
             $syncHash.ScubaRunViewConfig_Button.IsEnabled = $true
             Write-DebugOutput -Message "Enabled View Configuration button for: $configFilePath" -Source $MyInvocation.MyCommand -Level "Info"

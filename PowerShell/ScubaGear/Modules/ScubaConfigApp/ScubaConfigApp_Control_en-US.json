@@ -11,6 +11,7 @@
   "PullOnlineBaselines": false,
   "EnablePolicyViewer": true,
   "OnlineBaselineSchemaURL": "https://raw.githubusercontent.com/cisagov/ScubaGear/main/PowerShell/ScubaGear/schemas/ScubaBaselines.json",
+  "GitHubRepositoryUrl": "https://github.com/cisagov/ScubaGear",
   "LocalBaselineSchemaPath": "..\\..\\schemas\\ScubaBaselines.json",
   "DefaultConfigsSchemaPath": "..\\ScubaConfig\\ScubaConfigDefaults.json",
   "PolicyMigrationsCSVPath": "..\\..\\mappings\\scuba-baseline-policy-migrations.csv",
