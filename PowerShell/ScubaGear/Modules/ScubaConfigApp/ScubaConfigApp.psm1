@@ -929,7 +929,8 @@ Function Start-SCuBAConfigApp {
         $gitHubHyperlink = $syncHash.Window.FindName("GitHubHyperlink")
         if ($gitHubHyperlink) {
             $gitHubHyperlink.Add_RequestNavigate({
-                param($sender, $e)
+                param($eventSender, $e)
+                $null = $eventSender
                 Start-Process $syncHash.UIConfigs.GitHubRepositoryUrl
                 $e.Handled = $true
             })
