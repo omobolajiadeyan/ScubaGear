@@ -912,6 +912,18 @@ Function Start-SCuBAConfigApp {
             }
         })
 
+        # Wire up the GitHub Repository hyperlink at the bottom of the app.
+        # Hyperlink is a FrameworkContentElement and may not be populated into syncHash
+        # by the standard FindName loop, so we look it up explicitly here.
+        $gitHubHyperlink = $syncHash.Window.FindName("GitHubHyperlink")
+        if ($gitHubHyperlink) {
+            $gitHubHyperlink.Add_RequestNavigate({
+                param($sender, $e)
+                Start-Process $syncHash.UIConfigs.GitHubRepositoryUrl
+                $e.Handled = $true
+            })
+        }
+
         # Add click event handler
         $syncHash.DebugButton.Add_Click({
             Write-DebugOutput -Message "Debug button clicked" -Source $MyInvocation.MyCommand -Level "Verbose"

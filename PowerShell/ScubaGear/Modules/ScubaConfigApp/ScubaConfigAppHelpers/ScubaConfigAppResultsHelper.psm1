@@ -419,7 +419,7 @@ Function New-ResultsReportTab {
 
     # Load content immediately instead of lazy loading
     try {
-        if (Test-Path $Report.JsonResultsPath) {
+        if (-not [string]::IsNullOrWhiteSpace($Report.JsonResultsPath) -and (Test-Path $Report.JsonResultsPath)) {
             $jsonContent = Get-Content $Report.JsonResultsPath -Raw
             $scubaData = $jsonContent | ConvertFrom-Json
 

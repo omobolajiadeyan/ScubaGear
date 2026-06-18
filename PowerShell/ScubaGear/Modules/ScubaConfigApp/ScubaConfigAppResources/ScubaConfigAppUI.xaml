@@ -1903,7 +1903,7 @@
                     TextAlignment="Center">
                 <Run Text="ScubaConfigApp" FontWeight="SemiBold" Foreground="{StaticResource PrimaryBrush}"/>
                 <Run Text=" | "/>
-                <Hyperlink NavigateUri="https://github.com/cisagov/ScubaGear">
+                <Hyperlink x:Name="GitHubHyperlink" NavigateUri="https://github.com/cisagov/ScubaGear">
                     GitHub Repository
                 </Hyperlink>
             </TextBlock>
