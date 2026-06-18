@@ -1428,10 +1428,18 @@ Function Show-SCuBABaselinePolicyViewer {
 
         if (-not $BaselineDirectory -and -not $GitHubDirectoryUrl) {
             if ($pullOnline) {
-                # PullOnlineBaselines = true: download from OnlineBaselineSchemaURL, parse into memory
+                # PullOnlineBaselines = true: download to a temp file then load, matching the same
+                # approach used in Start-SCuBAConfigApp (Invoke-RestMethod returns text/plain which
+                # ConvertFrom-Json cannot parse directly from the pipeline for large files).
                 Write-Output "PullOnlineBaselines=true. Downloading baseline from: $($uiConfig.OnlineBaselineSchemaURL)"
-                $onlineBaselineData = Invoke-RestMethod -Uri $uiConfig.OnlineBaselineSchemaURL -ErrorAction Stop
-                Write-Output "Online baseline loaded into memory."
+                $onlineTempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    Invoke-WebRequest -Uri $uiConfig.OnlineBaselineSchemaURL -OutFile $onlineTempFile -ErrorAction Stop
+                    $onlineBaselineData = Get-Content -Path $onlineTempFile -Raw | ConvertFrom-Json
+                    Write-Output "Online baseline loaded into memory."
+                } finally {
+                    Remove-Item $onlineTempFile -Force -ErrorAction SilentlyContinue
+                }
             }
             else {
                 # PullOnlineBaselines = false (default): load directly from local schemas folder, no copy needed
