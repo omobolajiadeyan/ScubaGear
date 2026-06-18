@@ -376,9 +376,20 @@ Function Start-SCuBAConfigApp {
             try {
                 Write-DebugOutput -Message "PullOnlineBaselines=true. Loading baselines from: $($syncHash.UIConfigs.OnlineBaselineSchemaURL)" -Source $source -Level "Verbose"
 
-                $onlineBaselines = (Invoke-RestMethod -Uri $syncHash.UIConfigs.OnlineBaselineSchemaURL -ErrorAction Stop).baselines
-                $syncHash.Baselines = $onlineBaselines
-                Write-DebugOutput -Message "Successfully loaded baselines using: Online Schema JSON" -Source $source -Level "Info"
+                $tempFile = [System.IO.Path]::GetTempFileName()
+                try {
+                    Invoke-WebRequest -Uri $syncHash.UIConfigs.OnlineBaselineSchemaURL -OutFile $tempFile -ErrorAction Stop
+                    $downloadedBaselineCopy = (Get-Content -Path $tempFile -Raw | ConvertFrom-Json)
+                } finally {
+                    Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                }
+                $syncHash.Baselines = $downloadedBaselineCopy.baselines
+                if ($syncHash.Baselines) {
+                    Write-DebugOutput -Message "Successfully loaded baselines using: Online Schema JSON" -Source $source -Level "Info"
+                } else {
+                    Write-DebugOutput -Message "Online Schema JSON returned no baselines data" -Source $source -Level "Warning"
+                    $syncHash.Baselines = $null
+                }
             }
             catch {
                 Write-DebugOutput -Message "Failed to load baselines using Online Schema JSON: $($_.Exception.Message)" -Source $source -Level "Warning"
